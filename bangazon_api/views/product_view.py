@@ -8,10 +8,11 @@ from rest_framework.exceptions import ValidationError
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from bangazon_api.helpers import STATE_NAMES
-from bangazon_api.models import Product, Store, Category, Order, Rating, Recommendation
+from bangazon_api.models import Product, Store, Category, Order, Rating, Recommendation, OrderProduct
 from bangazon_api.serializers import (
     ProductSerializer, CreateProductSerializer, MessageSerializer,
     AddProductRatingSerializer, AddRemoveRecommendationSerializer)
+from django.db.models import Q
 
 
 class ProductView(ViewSet):
@@ -167,11 +168,12 @@ class ProductView(ViewSet):
         direction = request.query_params.get('direction', None)
         name = request.query_params.get('name', None)
         location = request.query_params.get('location', None)
+        min_price = request.query_params.get('min_price', None)
 
-        if number_sold:
+        if number_sold is not None:
             products = products.annotate(
-                order_count=Count('orders')
-            ).filter(order_count__lt=number_sold)
+                order_count = Count('orders', filter=~Q(orders__payment_type=None))
+            ).filter(order_count__gte = number_sold)
 
         if order is not None:
             order_filter = f'-{order}' if direction == 'desc' else order
@@ -185,6 +187,9 @@ class ProductView(ViewSet):
 
         if location is not None:
             products = products.filter(location__contains=location)
+
+        if min_price is not None:
+            products = products.filter(price__gte = min_price)
 
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
@@ -255,6 +260,8 @@ class ProductView(ViewSet):
             product = Product.objects.get(pk=pk)
             order = Order.objects.get(
                 user=request.auth.user, completed_on=None)
+            orderProduct = OrderProduct.objects.get(order_id=order.id, product_id=product.id)
+            orderProduct.delete()
             return Response(None, status=status.HTTP_204_NO_CONTENT)
         except Product.DoesNotExist as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
@@ -287,6 +294,8 @@ class ProductView(ViewSet):
             )
         }
     )
+
+    # RECOMMEND USERS
     @action(methods=['post', 'delete'], detail=True)
     def recommend(self, request, pk):
         """Add or remove a recommendation for a product to another user"""
@@ -300,9 +309,9 @@ class ProductView(ViewSet):
 
         if request.method == "POST":
             recommendation = Recommendation.objects.create(
-                product=product,
                 recommender=request.auth.user,
-                customer=customer
+                customer=customer,
+                product=product
             )
 
             return Response(None, status=status.HTTP_201_CREATED)

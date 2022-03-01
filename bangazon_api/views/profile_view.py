@@ -28,7 +28,8 @@ class ProfileView(ViewSet):
     def my_profile(self, request):
         """Get the current user's profile"""
         try:
-            serializer = UserSerializer(User.objects.first())
+            user = request.auth.user
+            serializer = UserSerializer(user)
             return Response(serializer.data)
         except User.DoesNotExist as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
@@ -54,3 +55,17 @@ class ProfileView(ViewSet):
         user.save()
 
         return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+    # @swagger_auto_schema(
+    #         responses={
+    #             200: openapi.Response(
+    #                 description="List of all users",
+    #                 schema=UserSerializer(many=True)
+    #             )
+    #         }
+    #     )
+    # def list(self, request):
+    #     """Get a list of all users"""
+    #     users = User.objects.all()
+    #     serializer = UserSerializer(users, many=True)
+    #     return Response(serializer.data)
