@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from bangazon_api.helpers import STATE_NAMES
-from bangazon_api.models import Product, Store, Category, Order, Rating, Recommendation, OrderProduct
+from bangazon_api.models import Product, Store, Category, Order, Rating, Recommendation, OrderProduct, Like
 from bangazon_api.serializers import (
     ProductSerializer, CreateProductSerializer, MessageSerializer,
     AddProductRatingSerializer, AddRemoveRecommendationSerializer)
@@ -356,3 +356,31 @@ class ProductView(ViewSet):
             )
 
         return Response({'message': 'Rating added'}, status=status.HTTP_201_CREATED)
+
+ # ADDING A LIKE TO A PRODUCT
+    @action(methods=['post'], detail=True)
+    def like(self, request, pk):
+        """Add a like to a product"""
+        try:
+            product = Product.objects.get(pk=pk)
+            user = request.auth.user
+
+            product.likes.add(user)
+
+            return Response({'message': 'like added'}, status=status.HTTP_201_CREATED)
+        except Like.DoesNotExist as ex:
+            return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
+
+ # REMOVING A LIKE TO A PRODUCT
+    @action(methods=['post'], detail=True)
+    def unlike(self, request, pk):
+        """Remove a like to a product"""
+        try:
+            product = Product.objects.get(pk=pk)
+            user = request.auth.user
+
+            product.likes.remove(user)
+
+            return Response({'message': 'like removed'}, status=status.HTTP_201_CREATED)
+        except Like.DoesNotExist as ex:
+            return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
