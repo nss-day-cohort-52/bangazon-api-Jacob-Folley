@@ -3,10 +3,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from django.db.models import Q, Count
-
+from rest_framework.decorators import action
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from bangazon_api.models import Store
+from bangazon_api.models import Store, Favorite
 from bangazon_api.serializers import StoreSerializer, MessageSerializer, AddStoreSerializer
 
 
@@ -103,4 +103,19 @@ class StoreView(ViewSet):
         except ValidationError as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_400_BAD_REQUEST)
         except Store.DoesNotExist as ex:
+            return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
+
+
+    # ADDING A FAVORITE STORE TO THE USER
+    @action(methods=['post'], detail=True)
+    def favorite(self, request, pk):
+        """Add a favorite store"""
+        try:
+            store = Store.objects.get(pk=pk)
+            user = request.auth.user
+
+            store.favorites.add(user)
+
+            return Response({'message': 'favorite added'}, status=status.HTTP_201_CREATED)
+        except Favorite.DoesNotExist as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
