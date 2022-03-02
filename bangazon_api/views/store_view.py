@@ -119,3 +119,17 @@ class StoreView(ViewSet):
             return Response({'message': 'favorite added'}, status=status.HTTP_201_CREATED)
         except Favorite.DoesNotExist as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
+
+    # REMOVING A FAVORITE STORE TO THE USER
+    @action(methods=['post'], detail=True)
+    def unfavorite(self, request, pk):
+        """removing a favorite store"""
+        try:
+            store = Store.objects.get(pk=pk)
+            user = request.auth.user
+
+            store.favorites.remove(user)
+
+            return Response({'message': 'favorite removed'}, status=status.HTTP_201_CREATED)
+        except Favorite.DoesNotExist as ex:
+            return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
