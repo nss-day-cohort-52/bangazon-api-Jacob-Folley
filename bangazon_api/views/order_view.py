@@ -62,10 +62,11 @@ class OrderView(ViewSet):
         try:
             order = Order.objects.get(pk=pk, user=request.auth.user)
             payment_type = PaymentType.objects.get(
-                pk=request.data['paymentTypeId'], customer=request.auth.user)
+                pk=request.data['payment_type'], customer=request.auth.user)
             order.payment_type = payment_type
             order.completed_on = datetime.now()
-            return Response({'message': "Order Completed"})
+            order.save()
+            return Response({'message': "Order Completed"}, status=status.HTTP_204_NO_CONTENT)
         except (Order.DoesNotExist, PaymentType.DoesNotExist) as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
 
