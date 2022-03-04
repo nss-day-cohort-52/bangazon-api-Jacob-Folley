@@ -4,7 +4,7 @@ from rest_framework.authtoken.models import Token
 from django.core.management import call_command
 from django.contrib.auth.models import User
 
-from bangazon_api.models import Order, Product, PaymentType
+from bangazon_api.models import Order, Product, PaymentType, OrderProduct
 
 
 class OrderTests(APITestCase):
@@ -24,7 +24,7 @@ class OrderTests(APITestCase):
         )
 
         self.user2 = User.objects.filter(store=None).last()
-        product = Product.objects.get(pk=1)
+        self.product = Product.objects.get(pk=1)
 
         # self.order1 = Order.objects.create(
         #     user=self.user1
@@ -71,6 +71,22 @@ class OrderTests(APITestCase):
         print(responseOrder.payment_type)
     
         self.assertEqual(responseOrder.payment_type, self.payment_type1)
+
+    def test_product_cart(self):
+        """
+        Ensure adding a product to the cart adds it to open order.
+        """
+        productObject = self.client.get('/api/products/1')
+       
+        # Initiate PUT request and capture the response
+        response = self.client.post(f'/api/products/{productObject.data["id"]}/add_to_order')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # # Initiate GET request and capture the response
+        # responseOrder = OrderProduct.objects.get(pk=productObject.data['id'])
+    
+
 
         
 
