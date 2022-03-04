@@ -11,40 +11,40 @@ from bangazon_api.models import Category
 from bangazon_api.models.product import Product
 
 
-# class ProductTests(APITestCase):
-#     def setUp(self):
-#         """
+class ProductTests(APITestCase):
+    def setUp(self):
+        """
 
-#         """
-#         call_command('seed_db', user_count=2)
-#         self.user1 = User.objects.filter(store__isnull=False).first()
-#         self.token = Token.objects.get(user=self.user1)
+        """
+        call_command('seed_db', user_count=2)
+        self.user1 = User.objects.filter(store__isnull=False).first()
+        self.token = Token.objects.get(user=self.user1)
 
-#         self.client.credentials(
-#             HTTP_AUTHORIZATION=f'Token {self.token.key}')
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Token {self.token.key}')
 
-#         self.faker = Faker()
-#         self.faker.add_provider(faker_commerce.Provider)
+        self.faker = Faker()
+        self.faker.add_provider(faker_commerce.Provider)
 
-#     def test_create_product(self):
-#         """
-#         Ensure we can create a new product.
-#         """
-#         category = Category.objects.first()
+    # def test_create_product(self):
+    #     """
+    #     Ensure we can create a new product.
+    #     """
+    #     category = Category.objects.first()
 
-#         data = {
-#             "name": self.faker.ecommerce_name(),
-#             "price": random.randint(50, 1000),
-#             "description": self.faker.paragraph(),
-#             "quantity": random.randint(2, 20),
-#             "location": random.choice(STATE_NAMES),
-#             "imagePath": "",
-#             "categoryId": category.id
-#         }
-#         response = self.client.post('/api/products', data, format='json')
+    #     data = {
+    #         "name": self.faker.ecommerce_name(),
+    #         "price": random.randint(50, 1000),
+    #         "description": self.faker.paragraph(),
+    #         "quantity": random.randint(2, 20),
+    #         "location": random.choice(STATE_NAMES),
+    #         "imagePath": "",
+    #         "categoryId": category.id
+    #     }
+    #     response = self.client.post('/api/products', data, format='json')
 
-#         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-#         self.assertIsNotNone(response.data['id'])
+    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    #     self.assertIsNotNone(response.data['id'])
 
 
 #     def test_update_product(self):
@@ -75,3 +75,22 @@ from bangazon_api.models.product import Product
 #         response = self.client.get('/api/products')
 #         self.assertEqual(response.status_code, status.HTTP_200_OK)
 #         self.assertEqual(len(response.data), Product.objects.count())
+
+    def test_delete_product(self):
+        """
+        Ensure we can delete an existing product.
+        """
+        # Define the URL path for deleting an existing Game
+        url = '/api/products/1'
+
+        # Initiate DELETE request and capture the response
+        response = self.client.delete(url)
+
+        # Assert that the response status code is 204 (NO CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Initiate GET request and capture the response
+        response = self.client.get(url)
+
+        # Assert that the response status code is 404 (NOT FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
